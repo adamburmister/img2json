@@ -1,0 +1,207 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<link rel="icon" href="http://assets.flog.co.nz/favicon.png" type="image/png" />
+	<style type="text/css">
+	@import 'http://assets.flog.co.nz/tumble/css/reset.css';
+	@import 'http://assets.flog.co.nz/tumble/css/typography.css';
+	@import 'http://assets.flog.co.nz/tumble/css/main.css';
+	/* img2json specific styles */
+	div.section {
+		margin: 3em 0 0;
+	}
+	div.section dl, div.section dl dt, div.section dl dd {
+		float: left;
+		margin: 0 0 0.5em;
+	}
+	div.section dl dt {
+		width: 100px;
+		clear: left;
+	}
+	div.section dl dd {
+		width: 400px;
+	}
+	code {
+		padding: 2px;
+	}
+	.highlight {
+		background: #eee;
+	}
+	pre, div#demoResult {
+		background: #f9f9f9;
+		padding: 10px;
+		border-top: 1px solid #eee;
+		border-bottom: 3px solid #eee;
+	}
+	</style>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/prototype/1.6.0.2/prototype.js"></script>
+
+	<title>IMG&middot;2&middot;JSON &mdash; An image meta&ndash;data to JSON web application</title>
+</head>
+<body>
+	<div id="skipLinks" class="noscreen">
+		Skip to: <a href="#about">Content</a>, <a href="http://www.flog.co.nz/">Flog home page</a>
+	</div>
+
+	<div class="bg">	
+		<div class="wrapper">
+			<h1 class="noscreen">
+				<a href="/">Flog</a>
+			</h1>
+			
+			<ul id="nav">
+				<li class="home"><a href="http://www.flog.co.nz/">Flog</a></li>
+			</ul>
+
+			<div id="title">
+				<h2>
+					<a href="http://img2json.appspot.com/">IMG&middot;2&middot;JSON</a> is a image metadata
+					extractor that's <a href="http://www.json.org/">JSON</a> savvy
+				</h2>
+			</div>
+
+			<dl class="tumblrMeta">
+				<dt class="noscreen">IMG2JSON by Adam Burmister</dt>
+				<dd>Version 1.0</dd>
+			</dl>
+			
+			<div id="about" class="section">
+				<h3>
+					What is IMG&middot;2&middot;JSON
+				</h3>
+				<p>
+					IMG&middot;2&middot;JSON is a simple Google App Engine python application which extracts metadata from 
+					images and returns the results as a <acronym title="JavaScript Object Notation">JSON</acronym> string.
+				</p>
+			</div>
+
+			
+			<div id="demo" class="section">
+				<h3>Live Demo</h3>
+				<h4>Run the demo &mdash; <a href="http://www.exif.org/samples/fujifilm-mx1700.jpg">640x480 Photo with EXIF data</a></h4>
+				<button type="button" id="btnDemo">
+					Display image info
+				</button>
+				<div id="demoResult">
+					<i style="color:#999">(No results yet, click the button above to begin the request)</i>
+				</div>
+				
+				<script type="text/javascript">
+				//<![CDATA[
+				
+				function displayImageMetaData(data){
+					var meta = 	"";
+					
+					meta += "<ul>";
+					meta += "<li><strong>URL:</strong> \"" + data.url + "\"</li>";
+					meta += "<li><strong>Width:</strong> " + data.width + "px</li>";
+					meta += "<li><strong>Height:</strong> " + data.height + "px</li>";
+					meta += "<li><strong>MIME type:</strong> \"" + data.mimeType + "\"</li>";
+					var kb = Math.round((data.byteSize / 1024) * Math.pow(10,1)) / Math.pow(10,1);
+					meta += "<li><strong>File Size:</strong> " + kb + "kb</li>";
+					var exif = "";
+					Object.keys(data.exif).each(
+						function(key){
+							exif += "<li><strong>" + key + ":</strong>" + data.exif[key] + "</li>";
+						}
+					);
+					meta += "<li><strong>EXIF:</strong> " + (exif ? "<ul>" + exif + "</ul>" : "(none)");
+					meta += "</ul>";
+					
+					
+					$('demoResult').update(meta);
+				}
+				
+				$('btnDemo').observe('click', function(){
+					new Ajax.Request('/go/?callback=displayImageMetaData&url=http://www.exif.org/samples/fujifilm-mx1700.jpg', {
+						method: 'get',
+						onSuccess: function(response) {
+							eval(response.responseText);
+						},
+						onFailure: function(response) {
+							alert("Oops! An error occurred while running the demo. I guess I should have tested this a bit more :P");
+						}
+					});
+				});
+
+				//]]>
+				</script>
+			</div>
+
+			<div id="usage" class="section">
+				<h3>How do I use it?</h3>
+				<p>
+					To use IMG&middot;2&middot;JSON all you need to do is perform a request for the fetcher-script URL 
+					hosted on Google App Engine.
+				</p>
+
+				<h4>Request Parameters</h4>
+				<dl>
+					<dt><code class="highlight">url</code></dt>
+					<dd><strong>(required)</strong> The URL of the image</dd>
+					<dt><code class="highlight">callback</code></dt>
+					<dd>A callback function string. This will wrap around the returned JSON, allowing you to execute
+						callbacks when you receive the response</dd>
+				</dl>
+				
+				<h4>Response Parameters</h4>
+				<dl>
+					<dt><code class="highlight">url</code></dt>
+					<dd>The URL of the image this metadata belongs to</dd>
+					<dt><code class="highlight">mimeType</code></dt>
+					<dd>The detected mime&ndash;type of the image</dd>
+					<dt><code class="highlight">width</code></dt>
+					<dd>Width of the image in pixels</dd>
+					<dt><code class="highlight">height</code></dt>
+					<dd>Height of the image in pixels</dd>
+					<dt><code class="highlight">byteSize</code></dt>
+					<dd>The file size of the image in bytes</dd>
+					<dt><code class="highlight">exif</code></dt>
+					<dd>Any EXIF metadata extracted from the image (such as Camera Manufacturer, Model, Orientation, Date, GPS position, etc)</dd>
+				</dl>
+			</div>
+			
+			<div id="example" class="section">
+				<h3>Example Usage</h3>
+				<h4>Build up the request URL</h4>
+				<p>
+					The first step is to build up the request URL:
+					<br />
+					<code>http://img2json.appspot.com/go/?<span class="highlight">callback</span>=myCallbackMethod&amp; <strong>&crarr;</strong><br />&nbsp;&nbsp;<span class="highlight">url</span>=http://assets.flog.co.nz/favicon.png</code>
+				</p>
+				<p>
+					<em>In the URL above note the callback function set to "<code>myCallbackMethod</code>" and the URL set to "<code>&hellip;favicon.png</code>"</em>
+				</p>
+				
+				<h4>Request the URL and read the response</h4>
+				<p>
+					<strong>The result JSON returned by this request</strong> correctly identifies the images associated metadata and encloses the JSON object in the callback method:
+				</p>
+				<pre>myCallbackMethod({
+	url: "http://assets.flog.co.nz/favicon.png",
+	mimeType: "image/png",
+	width: 16,
+	height: 16,
+	byteSize: 524,
+	exif: {}
+});</pre>
+			</div>
+			
+			<div id="credits" class="section">
+				<h3>Credits</h3>
+				<p>
+					This application was written by <a href="http://www.flog.co.nz/about/">Adam Burmister</a> (<a href="http://www.flog.co.nz">www.flog.co.nz</a>) in half an hour as a 
+					way to learn some Python and Google App Engine.
+				</p>
+				<p>
+					<a href="http://code.google.com/appengine/">
+						<img src="http://code.google.com/appengine/images/appengine-noborder-120x30.gif" alt="Powered by Google App Engine" />
+					</a>
+				</p>
+			</div>
+		</div>
+	</div>
+	
+</body>
+</html>

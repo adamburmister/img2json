@@ -1,0 +1,8 @@
+{% if callback %}{{ callback }}({{% else %}{{% endif %}
+	'url': '{{ url }}',
+	'mimeType': '{{ mime_type }}',
+	'width': {{ width }},
+	'height': {{ height }},
+	'byteSize': {{ byte_size }},
+	'exif': {{ exif }}
+{% if callback %}});{% else %}};{% endif %}
